@@ -1,8 +1,8 @@
 ###############################################
 # Frontend Build
 ###############################################
-FROM node:24@sha256:64af3819f9275802414d7cdc38c27e9d82bd564dec4d4da87d008255d36c63b4 \
-    AS frontend-builder
+# Keep FROM declarations on one line for Coolify's build-argument injection.
+FROM node:24@sha256:64af3819f9275802414d7cdc38c27e9d82bd564dec4d4da87d008255d36c63b4 AS frontend-builder
 
 RUN npm install --global pnpm@11.23.0
 
@@ -22,8 +22,7 @@ RUN pnpm generate
 ###############################################
 # Base Image - Python
 ###############################################
-FROM python:3.14-slim@sha256:caaf356f40667c496d405780745b9ac25771c189a51dfcc42430d531ea09f8a2 \
-    AS python-base
+FROM python:3.14-slim@sha256:caaf356f40667c496d405780745b9ac25771c189a51dfcc42430d531ea09f8a2 AS python-base
 
 ENV MEALIE_HOME="/app"
 

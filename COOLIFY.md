@@ -27,7 +27,8 @@ documentation for the corresponding controls.
 Copy the variables from [docker/coolify.env.example](docker/coolify.env.example) into
 Coolify's runtime environment. Replace `BASE_URL` with the exact HTTPS address users
 will visit (no trailing slash), and `SMTP_PASSWORD` with your Resend API key. Mark the
-key as a secret and keep **Build Variable** disabled for it. The key is not in this
+key as a secret. Keep **Build Variable** disabled for all these runtime variables;
+none are needed during the image build. The key is not in this
 repository or image; the local `.run/email.env` file is excluded from Git and Docker.
 
 `MAGIC_LINK_ENABLED=true` enables email login when SMTP is configured. Resend must
