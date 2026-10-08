@@ -377,5 +377,50 @@ at least these sensitive environment variables when working within shared enviro
 - `LDAP_QUERY_PASSWORD`
 
 [docker-secrets]: https://docs.docker.com/compose/use-secrets/
+
+## Email sign-in links and Resend
+
+Set `MAGIC_LINK_ENABLED=true` to offer email sign-in alongside the existing login methods.
+The option appears only when SMTP is configured. Links sign in existing Mealie accounts;
+new users must register first. LDAP and OIDC accounts continue to use their configured provider.
+
+For [Resend SMTP](https://resend.com/docs/send-with-smtp), use:
+
+```dotenv
+MAGIC_LINK_ENABLED=true
+SMTP_HOST=smtp.resend.com
+SMTP_PORT=465
+SMTP_AUTH_STRATEGY=SSL
+SMTP_USER=resend
+SMTP_PASSWORD=YOUR_RESEND_API_KEY
+SMTP_FROM_NAME=Mealie
+SMTP_FROM_EMAIL=recipes@your-verified-domain.com
+BASE_URL=https://your-mealie-host
+```
+
+Use an API key allowed to send from the verified sender domain. Keep the key in a private
+environment file or secret store. These SMTP settings apply to invitations, password resets,
+test emails, and sign-in links. Restart Mealie after changing environment settings.
+
+Sign-in links expire after 15 minutes and can be used once. The database stores only their
+hashes. Opening the link automatically signs in and remembers the session, with no second
+confirmation. The token is carried in the URL fragment and removed from the address bar
+before the browser exchanges it via POST. Plain HTTP link previews do not consume it;
+email scanners that execute JavaScript can. Changing the account email, password, authentication method,
+or token-revocation timestamp invalidates outstanding links; locked users cannot use them.
+
+Requests return the same response for unknown, ineligible, or throttled addresses. Delivery
+is limited to one request per minute and five per 15 minutes per address, and 20 per
+15 minutes per client IP. Configure Uvicorn to trust forwarding headers only from your
+reverse proxy so those limits see the correct client address. Delivery failures are logged
+without email addresses or tokens and invalidate the affected link.
+
+`TOKEN_TIME=8760` gives sessions a one-year lifetime. With **Remember me** enabled, the
+session cookie also persists for that year and is renewed by the existing refresh flow.
+Without it, the browser uses a session cookie. This setting applies to other login methods
+too; changing it takes effect on the next login or token refresh.
+
+For a private Tailscale deployment, set `BASE_URL` to the Tailscale address users can reach.
+They must be connected to Tailscale when they open a sign-in link.
 [secrets]: #docker-secrets
 [unicorn_workers]: https://www.uvicorn.org/deployment/#built-in

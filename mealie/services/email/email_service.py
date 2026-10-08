@@ -66,6 +66,17 @@ class EmailService(BaseService):
         )
         return self.send_email(address, invitation)
 
+    def send_magic_link(self, address: str, login_url: str) -> bool:
+        template = EmailTemplate(
+            subject=self.translator.t("emails.magic-link.subject"),
+            header_text=self.translator.t("emails.magic-link.header_text"),
+            message_top=self.translator.t("emails.magic-link.message_top"),
+            message_bottom=self.translator.t("emails.magic-link.message_bottom"),
+            button_link=login_url,
+            button_text=self.translator.t("emails.magic-link.button_text"),
+        )
+        return self.send_email(address, template)
+
     def send_test_email(self, address: str) -> bool:
         test_email = EmailTemplate(
             subject=self.translator.t("emails.test.subject"),

@@ -9,7 +9,7 @@ from mealie.services.email.email_senders import ABCEmailSender, UTF8AuthSMTP
 
 FAKE_ADDRESS = "my_secret_email@example.com"
 
-SUBJECTS = {"Mealie Forgot Password", "Invitation to join Mealie", "Mealie Test Email"}
+SUBJECTS = {"Mealie Forgot Password", "Invitation to join Mealie", "Mealie Test Email", "Your Mealie sign-in link"}
 
 NON_ASCII_USER = "jürgen@mealie.io"
 NON_ASCII_PASSWORD = "pa€ssword"
@@ -94,6 +94,10 @@ def test_forgot_password_email(email_service):
 def test_invitation_email(email_service):
     success = email_service.send_invitation(FAKE_ADDRESS, "https://invitie-url.com")
     assert success
+
+
+def test_magic_link_email(email_service):
+    assert email_service.send_magic_link(FAKE_ADDRESS, "https://mealie.example.com/login#magic=example")
 
 
 def test_smtp_login_plain_non_ascii_credentials():

@@ -42,6 +42,7 @@ from mealie.repos.repository_ai_provider import GroupRepositoryAIProvider
 from mealie.repos.repository_cookbooks import RepositoryCookbooks
 from mealie.repos.repository_foods import RepositoryFood
 from mealie.repos.repository_household import RepositoryHousehold, RepositoryHouseholdRecipes
+from mealie.repos.repository_magic_links import RepositoryMagicLinks
 from mealie.repos.repository_meal_plan_rules import RepositoryMealPlanRules
 from mealie.repos.repository_units import RepositoryUnit
 from mealie.schema.cookbook.cookbook import ReadCookBook
@@ -339,6 +340,10 @@ class AllRepositories:
     @cached_property
     def api_tokens(self) -> GroupRepositoryGeneric[LongLiveTokenInDB, LongLiveToken]:
         return GroupRepositoryGeneric(self.session, PK_ID, LongLiveToken, LongLiveTokenInDB, group_id=self.group_id)
+
+    @cached_property
+    def magic_links(self) -> RepositoryMagicLinks:
+        return RepositoryMagicLinks(self.session)
 
     @cached_property
     def tokens_pw_reset(self) -> GroupRepositoryGeneric[PrivatePasswordResetToken, PasswordResetModel]:

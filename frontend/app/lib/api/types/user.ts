@@ -161,6 +161,13 @@ export interface LongLiveTokenOut {
   id: number;
   createdAt?: string | null;
 }
+export interface MagicLinkRequest {
+  email: string;
+}
+export interface MagicLinkVerify {
+  token: string;
+  remember_me?: boolean;
+}
 export interface NativeOIDCTokenRequest {
   code: string;
   code_verifier: string;

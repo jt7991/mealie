@@ -145,9 +145,9 @@ tasks:
       - ui:generate
     cmds:
       - rm -rf mealie/frontend
-      - cp -a frontend/dist mealie/frontend
+      - cp -a frontend/.output/public mealie/frontend
     sources:
-      - frontend/dist/**
+      - frontend/.output/public/**
     generates:
       - mealie/frontend/**
 
@@ -237,7 +237,7 @@ tasks:
       - task: py:format
 
   ui:build:
-    desc: builds the frontend in frontend/dist
+    desc: builds the frontend in frontend/.output
     dir: frontend
     cmds:
       - pnpm build
@@ -249,7 +249,7 @@ tasks:
       - exclude: node_modules/.cache/**
 
   ui:generate:
-    desc: generates a static version of the frontend in frontend/dist
+    desc: generates a static version of the frontend in frontend/.output/public
     dir: frontend
     deps:
       - setup:ui

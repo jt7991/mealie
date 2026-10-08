@@ -128,6 +128,13 @@
         "microsecond": "microsecond|microseconds"
     },
     "emails": {
+        "magic-link": {
+            "subject": "Your Mealie sign-in link",
+            "header_text": "Sign in to Mealie",
+            "message_top": "Use this link to sign in to your Mealie account. It expires in 15 minutes and can be used once.",
+            "message_bottom": "If you did not request this email, you can ignore it. Never share this link with anyone.",
+            "button_text": "Sign in to Mealie"
+        },
         "password": {
             "subject": "Mealie Forgot Password",
             "header_text": "Forgot Password",

@@ -2,7 +2,7 @@ from datetime import timedelta
 from typing import Annotated, Any
 
 import jwt
-from fastapi import APIRouter, Depends, Header, Request, Response, status
+from fastapi import APIRouter, BackgroundTasks, Depends, Header, Request, Response, status
 from fastapi.exceptions import HTTPException
 from fastapi.responses import RedirectResponse
 from jwt.exceptions import PyJWTError
@@ -19,7 +19,14 @@ from mealie.db.db_setup import generate_session
 from mealie.lang import get_locale_provider
 from mealie.routes._base.routers import UserAPIRouter
 from mealie.schema.user import PrivateUser
-from mealie.schema.user.auth import CredentialsRequestForm, NativeOIDCTokenRequest, OIDCNativeConfig
+from mealie.schema.user.auth import (
+    CredentialsRequestForm,
+    MagicLinkRequest,
+    MagicLinkVerify,
+    NativeOIDCTokenRequest,
+    OIDCNativeConfig,
+)
+from mealie.services.user_services.magic_link_service import MagicLinkService, deliver_magic_link
 
 from .auth_cache import AuthCache
 
@@ -161,6 +168,44 @@ def get_token(
 
     access_token, duration = auth
     set_session_cookie(response, request, access_token, duration, data.remember_me)
+    return MealieAuthToken.respond(access_token, duration)
+
+
+@public_router.post("/magic-link", status_code=status.HTTP_202_ACCEPTED)
+def request_magic_link(
+    data: MagicLinkRequest,
+    request: Request,
+    response: Response,
+    background_tasks: BackgroundTasks,
+    session: Session = Depends(generate_session),
+    accept_language: Annotated[str | None, Header()] = None,
+):
+    if not get_app_settings().MAGIC_LINK_READY:
+        raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, "Email sign-in is unavailable")
+    # Uvicorn handles proxy headers only from configured trusted proxies.
+    requester = request.client.host if request.client else "unknown"
+    delivery = MagicLinkService(session).request_link(data.email, requester)
+    if delivery:
+        background_tasks.add_task(deliver_magic_link, *delivery, accept_language)
+    response.headers["Cache-Control"] = "no-store"
+    return {"message": "If an eligible account exists, a sign-in link will be emailed. It expires in 15 minutes."}
+
+
+@public_router.post("/magic-link/verify")
+def verify_magic_link(
+    data: MagicLinkVerify,
+    request: Request,
+    response: Response,
+    session: Session = Depends(generate_session),
+):
+    if not get_app_settings().MAGIC_LINK_READY:
+        raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, "Email sign-in is unavailable")
+    auth = MagicLinkService(session).verify(data.token, data.remember_me)
+    if not auth:
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "This sign-in link is invalid or expired")
+    access_token, duration = auth
+    set_session_cookie(response, request, access_token, duration, data.remember_me)
+    response.headers["Cache-Control"] = "no-store"
     return MealieAuthToken.respond(access_token, duration)
 
 

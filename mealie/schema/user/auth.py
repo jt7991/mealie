@@ -11,6 +11,18 @@ class Token(BaseModel):
     token_type: str
 
 
+class MagicLinkRequest(BaseModel):
+    email: Annotated[
+        str,
+        StringConstraints(strip_whitespace=True, min_length=3, max_length=254, pattern=r"^[^\s@]+@[^\s@]+\.[^\s@]+$"),
+    ]
+
+
+class MagicLinkVerify(BaseModel):
+    token: Annotated[str, StringConstraints(min_length=43, max_length=43, pattern=r"^[A-Za-z0-9_-]+$")]
+    remember_me: bool = True
+
+
 class TokenData(BaseModel):
     user_id: UUID4 | None = None
     username: Annotated[str, StringConstraints(to_lower=True, strip_whitespace=True)] | None = None  # type: ignore

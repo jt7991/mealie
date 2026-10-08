@@ -11,6 +11,7 @@ export interface AdminAboutInfo {
   demoStatus: boolean;
   allowSignup: boolean;
   allowPasswordLogin: boolean;
+  enableMagicLink?: boolean;
   defaultGroupSlug?: string | null;
   defaultHouseholdSlug?: string | null;
   enableOidc: boolean;
@@ -43,6 +44,7 @@ export interface AppInfo {
   demoStatus: boolean;
   allowSignup: boolean;
   allowPasswordLogin: boolean;
+  enableMagicLink?: boolean;
   defaultGroupSlug?: string | null;
   defaultHouseholdSlug?: string | null;
   enableOidc: boolean;

@@ -4,7 +4,7 @@
 FROM node:24@sha256:64af3819f9275802414d7cdc38c27e9d82bd564dec4d4da87d008255d36c63b4 \
     AS frontend-builder
 
-RUN npm install --global pnpm@11
+RUN npm install --global pnpm@11.23.0
 
 WORKDIR /frontend
 
@@ -15,7 +15,7 @@ COPY frontend .
 # in app/lang/locales/*.ts resolves identically here and in local dev.
 COPY mealie/repos/seed/resources/units/locales /mealie/repos/seed/resources/units/locales
 
-RUN pnpm clean-install
+RUN pnpm install --frozen-lockfile
 
 RUN pnpm generate
 
@@ -65,7 +65,7 @@ COPY uv.lock pyproject.toml ./
 COPY mealie ./mealie
 
 # Copy frontend to package it into the wheel
-COPY --from=frontend-builder /frontend/dist ./mealie/frontend
+COPY --from=frontend-builder /frontend/.output/public ./mealie/frontend
 
 # Build the source and binary package
 RUN uv build --out-dir dist
@@ -159,7 +159,7 @@ EXPOSE ${APP_PORT}
 
 COPY ./docker/healthcheck.sh $MEALIE_HOME/healthcheck.sh
 RUN chmod +x $MEALIE_HOME/healthcheck.sh
-HEALTHCHECK CMD $MEALIE_HOME/healthcheck.sh
+HEALTHCHECK --interval=30s --timeout=10s --start-period=90s --retries=3 CMD $MEALIE_HOME/healthcheck.sh
 
 ENV HOST=0.0.0.0
 

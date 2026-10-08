@@ -1,6 +1,6 @@
 import { ref, watch, computed } from "vue";
 import { useAuthBackend } from "~/composables/use-auth-backend";
-import type { UserOut } from "~/lib/api/types/user";
+import type { MagicLinkVerify, UserOut } from "~/lib/api/types/user";
 
 export const useMealieAuth = function () {
   const auth = useAuthBackend();
@@ -48,6 +48,16 @@ export const useMealieAuth = function () {
     }
   }
 
+  async function magicLinkSignIn(token: string, remember: boolean) {
+    const body: MagicLinkVerify = { token, remember_me: remember };
+    const { data } = await $axios.post<{ access_token: string }>("/api/auth/magic-link/verify", body);
+    auth.setToken(data.access_token);
+    await auth.getSession();
+    if (auth.status.value !== "authenticated") {
+      throw new Error("Email sign-in succeeded but the session could not be established");
+    }
+  }
+
   return {
     user,
     loggedIn,
@@ -56,5 +66,6 @@ export const useMealieAuth = function () {
     signOut: auth.signOut,
     getSession: auth.getSession,
     oauthSignIn,
+    magicLinkSignIn,
   };
 };

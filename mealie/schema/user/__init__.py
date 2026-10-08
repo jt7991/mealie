@@ -2,6 +2,8 @@
 from .auth import (
     CredentialsRequest,
     CredentialsRequestForm,
+    MagicLinkRequest,
+    MagicLinkVerify,
     NativeOIDCTokenRequest,
     OIDCNativeConfig,
     Token,
@@ -46,14 +48,16 @@ from .user_passwords import (
 )
 
 __all__ = [
-    "CreateUserRegistration",
     "CredentialsRequest",
     "CredentialsRequestForm",
+    "MagicLinkRequest",
+    "MagicLinkVerify",
     "NativeOIDCTokenRequest",
     "OIDCNativeConfig",
     "Token",
     "TokenData",
     "UnlockResults",
+    "CreateUserRegistration",
     "ChangePassword",
     "CreateToken",
     "DeleteTokenResponse",

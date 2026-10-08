@@ -5,6 +5,24 @@
 .gitignore
 .idea
 .vscode
+.run/
+.task/
+.impeccable/
+.env
+.env.*
+.dev.env
+**/.env
+**/.env.*
+**/node_modules
+**/.nuxt
+**/.output
+**/coverage
+tests/.temp/
+dev/data/
+**/*.db
+**/*.db-shm
+**/*.db-wal
+**/*.log
 
 **/__pycache__/
 *.py[cod]

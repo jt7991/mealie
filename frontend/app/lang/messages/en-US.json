@@ -1,4 +1,18 @@
 {
+  "magic-link": {
+    "email-required": "Enter a valid email address.",
+    "description": "Sign in with a link sent to your email. No password needed.",
+    "send": "Email me a sign-in link",
+    "use-password": "Use a password instead",
+    "use-email": "Sign in with email instead",
+    "check-email": "Check your email",
+    "sent-description": "If an account exists for that email, we’ll send a sign-in link. It works once and expires in 15 minutes.",
+    "delivery-help": "Check your spam folder. If no email arrives, wait a minute before trying again. New here? Register below first.",
+    "try-again": "Try again or use another email",
+    "signing-in": "Signing you in…",
+    "invalid": "This sign-in link has expired, was already used, or could not sign you in. Request a new link below.",
+    "request-error": "We couldn’t request your sign-in link. Check your connection and email address, then try again."
+  },
   "about": {
     "about": "About",
     "api-docs": "API Docs",

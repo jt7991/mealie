@@ -57,7 +57,7 @@ jobs:
       - name: Copy the frontend into the package
         run: |
           rm -rf mealie/frontend
-          cp -a frontend/dist mealie/frontend
+          cp -a frontend/.output/public mealie/frontend
 
       - name: Override __init__.py
         run: |

@@ -1,4 +1,5 @@
 import re
+import shutil
 import subprocess
 from collections.abc import Iterable, Iterator
 from contextlib import contextmanager
@@ -238,7 +239,7 @@ def generate_typescript_types() -> None:  # noqa: C901
 
     # Run ESLint --fix on the files to clean up any formatting issues
     subprocess.run(
-        ["pnpm", "lint", "--fix", *(str(path) for path in out_paths)],
+        [shutil.which("pnpm") or "pnpm", "lint", "--fix", *(str(path) for path in out_paths)],
         check=True,
         cwd=PROJECT_DIR / "frontend",
     )

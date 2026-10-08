@@ -302,6 +302,12 @@ class AppSettings(AppLoggingSettings):
     SMTP_PASSWORD: MaskedNoneString = None
     SMTP_AUTH_STRATEGY: str | None = "TLS"  # Options: 'TLS', 'SSL', 'NONE'
 
+    MAGIC_LINK_ENABLED: bool = False
+
+    @property
+    def MAGIC_LINK_READY(self) -> bool:
+        return self.MAGIC_LINK_ENABLED and self.SMTP_ENABLE
+
     @property
     def SMTP_ENABLE(self) -> bool:
         return self.SMTP_FEATURE.enabled

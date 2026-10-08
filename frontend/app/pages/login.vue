@@ -57,9 +57,14 @@
         {{ $t('user.sign-in') }}
       </v-card-title>
       <v-card-text class="w-100">
+        <UserMagicLinkLogin
+          v-if="$appInfo.enableMagicLink && !showPasswordLogin"
+          :allow-password="$appInfo.allowPasswordLogin"
+          @use-password="showPasswordLogin = true"
+        />
         <v-form @submit.prevent="authenticate">
           <v-text-field
-            v-if="$appInfo.allowPasswordLogin"
+            v-if="showPasswordFields"
             id="username"
             v-model="form.email"
             :prepend-inner-icon="$globals.icons.email"
@@ -73,7 +78,7 @@
             type="text"
           />
           <v-text-field
-            v-if="$appInfo.allowPasswordLogin"
+            v-if="showPasswordFields"
             id="password"
             v-model="form.password"
             :prepend-inner-icon="$globals.icons.lock"
@@ -87,12 +92,12 @@
             @click:append-inner="togglePasswordShow"
           />
           <v-checkbox
-            v-if="$appInfo.allowPasswordLogin"
+            v-if="showPasswordFields"
             v-model="form.remember"
             class="ml-2 mt-n2"
             :label="$t('user.remember-me')"
           />
-          <v-card-actions v-if="$appInfo.allowPasswordLogin" class="justify-center pt-0">
+          <v-card-actions v-if="showPasswordFields" class="justify-center pt-0">
             <div class="max-button">
               <v-btn
                 :loading="loggingIn"
@@ -109,6 +114,16 @@
               </v-btn>
             </div>
           </v-card-actions>
+
+          <v-btn
+            v-if="$appInfo.enableMagicLink && showPasswordLogin"
+            variant="text"
+            block
+            class="mt-3"
+            @click="showPasswordLogin = false"
+          >
+            {{ $t('magic-link.use-email') }}
+          </v-btn>
 
           <div
             v-if="$appInfo.enableOidc && $appInfo.allowPasswordLogin"
@@ -230,6 +245,8 @@ const route = useRoute();
 const i18n = useI18n();
 const auth = useMealieAuth();
 const { $appInfo, $axios } = useNuxtApp();
+const showPasswordLogin = ref(false);
+const showPasswordFields = computed(() => $appInfo.allowPasswordLogin && (!$appInfo.enableMagicLink || showPasswordLogin.value));
 const { loggedIn } = useLoggedInState();
 const groupSlug = computed(() => auth.user.value?.groupSlug);
 const isDemo = ref(false);
@@ -242,6 +259,7 @@ const pendingShareRedirect = useSessionStorage<string | null>("pwa_share_redirec
 
 useSeoMeta({
   title: i18n.t("user.login"),
+  referrer: "no-referrer",
 });
 
 const form = reactive({
@@ -307,7 +325,7 @@ const oidcLoggingIn = ref(false);
 const { passwordIcon, inputType, togglePasswordShow } = usePasswordField();
 
 whenever(
-  () => $appInfo.enableOidc && $appInfo.oidcRedirect && !isCallback() && !isDirectLogin() /* && !auth.check().valid */,
+  () => $appInfo.enableOidc && $appInfo.oidcRedirect && !isCallback() && !isDirectLogin() && !route.hash.includes("magic=") /* && !auth.check().valid */,
   () => oidcAuthenticate(),
   { immediate: true },
 );

@@ -1,5 +1,6 @@
 import hmac
 import smtplib
+import ssl
 import typing
 from abc import ABC, abstractmethod
 from collections.abc import Buffer
@@ -102,7 +103,9 @@ class Message:
         msg["MIME-Version"] = "1.0"
 
         if smtp.ssl:
-            with UTF8AuthSMTPSSL(smtp.host, smtp.port, timeout=SMTP_TIMEOUT) as server:
+            with UTF8AuthSMTPSSL(
+                smtp.host, smtp.port, timeout=SMTP_TIMEOUT, context=ssl.create_default_context()
+            ) as server:
                 if smtp.username and smtp.password:
                     server.login(smtp.username, smtp.password)
 
@@ -110,7 +113,7 @@ class Message:
         else:
             with UTF8AuthSMTP(smtp.host, smtp.port, timeout=SMTP_TIMEOUT) as server:
                 if smtp.tls:
-                    server.starttls()
+                    server.starttls(context=ssl.create_default_context())
                 if smtp.username and smtp.password:
                     server.login(smtp.username, smtp.password)
                 errors = server.send_message(msg)

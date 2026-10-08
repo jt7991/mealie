@@ -16,6 +16,7 @@ class AppInfo(MealieModel):
     demo_status: bool
     allow_signup: bool
     allow_password_login: bool
+    enable_magic_link: bool = False
     default_group_slug: str | None = None
     default_household_slug: str | None = None
     enable_oidc: bool
