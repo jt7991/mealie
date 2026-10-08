@@ -1,24 +1,45 @@
 # Deploy this fork with Coolify
 
-Connect `jt7991/mealie`, branch `mealie-next`, as a Git-based application.
+GitHub Actions builds and checks the production image, then publishes it to GHCR.
+Coolify pulls the image; it must not compile this application on the 4 GB server.
+
+Disable Auto Deploy on the old Git-based application before pushing changes.
+Create a **Docker Image** application in Coolify using the settings below.
+After the first publication, open the GitHub package settings for `jt7991/mealie`
+and change its visibility to **Public** so Coolify can pull without credentials.
+Public repository visibility does not automatically make a new GHCR package public.
 
 | Setting | Value |
 | --- | --- |
-| Build pack | Dockerfile |
-| Base directory / build context | `/` (repository root) |
-| Dockerfile location | `/docker/Dockerfile` |
-| Build stage, if requested | `production` |
+| Resource type | Docker Image |
+| Docker image | `ghcr.io/jt7991/mealie` |
+| Image tag | `latest` |
 | Port exposed | `9000` |
 | Domain | Your chosen HTTPS domain |
 | Persistent storage destination | `/app/data` |
 | Health check | HTTP GET `/api/app/about` on port `9000` |
 
-The Dockerfile builds both the Nuxt frontend and the Python backend from this checkout;
-no prebuilt package or extra build context is required. It includes a health check with
+The published image contains both the Nuxt frontend and Python backend, built on a
+standard GitHub-hosted Ubuntu runner for `linux/amd64`. It includes a health check with
 a 90-second startup grace period. Use one replica with SQLite, and avoid overlapping
 deployments against the same SQLite volume. The default single worker is sufficient.
 
-See Coolify's [Dockerfile](https://coolify.io/docs/applications/builds/dockerfile) and
+Reuse the old application's exact named volume if it contains data; a new volume
+creates a new database. Stop the old app before attaching its volume or moving the
+domain. Keep the old volume until the new instance and data are verified.
+
+For automatic deployment, enable Coolify API access and create an API token with
+Deploy permission. In the GitHub repository's Settings > Secrets and variables >
+Actions, add `COOLIFY_WEBHOOK` (the new Docker Image app's authenticated HTTPS deploy
+webhook URL) and `COOLIFY_TOKEN` (the API token). Do not use the old Git app's webhook.
+The workflow requests deployment only after the image passes checks and is published.
+Without both secrets configured, the first build can publish an image without
+deploying; make the GHCR package public before configuring the secrets. You can then
+click Deploy in Coolify for the first launch. Future code pushes deploy automatically.
+Webhook acceptance means deployment was queued, not that the container is healthy.
+For a fixed version or rollback, use the `sha-<full commit SHA>` image tag.
+
+See Coolify's [Docker Image](https://coolify.io/docs/applications/deployments/docker-image) and
 [persistent storage](https://coolify.io/docs/applications/configuration/persistent-storage)
 documentation for the corresponding controls.
 
@@ -64,8 +85,11 @@ how users will reach the new instance. Email links use `BASE_URL` exactly.
 
 ## Container verification
 
-GitHub Actions workflows have been removed from this fork. Coolify builds the
-Dockerfile directly; no GitHub Actions build is required.
+The only GitHub Actions workflow is `.github/workflows/publish-image.yml`. It builds
+on pushes to `mealie-next` (except Markdown-only changes) or manual dispatch, tests
+API and frontend startup, then publishes the image. It uses the built-in GitHub
+token with package write permission; no Resend or Coolify credentials are needed.
+Runtime credentials remain exclusively in Coolify.
 
 For a local Docker build:
 

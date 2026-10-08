@@ -1,0 +1,88 @@
+name: Build and publish Mealie image
+
+on:
+  push:
+    branches: [mealie-next]
+    paths-ignore:
+      - '**/*.md'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: publish-mealie-image
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: github.repository == 'jt7991/mealie' && github.ref == 'refs/heads/mealie-next'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      IMAGE: ghcr.io/jt7991/mealie
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Build production image
+        run: |
+          docker build --file docker/Dockerfile --target production \
+            --build-arg COMMIT="$GITHUB_SHA" \
+            --label org.opencontainers.image.source="https://github.com/$GITHUB_REPOSITORY" \
+            --label org.opencontainers.image.revision="$GITHUB_SHA" \
+            --tag "$IMAGE:sha-$GITHUB_SHA" --tag "$IMAGE:latest" .
+
+      - name: Check container startup and frontend
+        run: |
+          docker run -d --name mealie-check -p 127.0.0.1:9000:9000 \
+            -e BASE_URL=http://localhost:9000 -e DB_ENGINE=sqlite \
+            -e TOKEN_TIME=8760 "$IMAGE:sha-$GITHUB_SHA"
+          for attempt in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:9000/api/app/about > /tmp/about.json; then
+              break
+            fi
+            sleep 3
+          done
+          curl -fsS http://127.0.0.1:9000/api/app/about | jq -e '.tokenTime == 8760'
+          curl -fsSL http://127.0.0.1:9000/login > /tmp/login.html
+          asset=$(grep -oE 'src="[^"]+\.js"' /tmp/login.html | sed -n '1p' | cut -d '"' -f 2)
+          test -n "$asset"
+          curl -fsS "http://127.0.0.1:9000$asset" > /dev/null
+
+      - name: Publish checked image to GHCR
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+          docker push "$IMAGE:sha-$GITHUB_SHA"
+          docker push "$IMAGE:latest"
+          echo "Published \`$IMAGE:sha-$GITHUB_SHA\` and \`$IMAGE:latest\`" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Request Coolify deployment
+        env:
+          COOLIFY_WEBHOOK: ${{ secrets.COOLIFY_WEBHOOK }}
+          COOLIFY_TOKEN: ${{ secrets.COOLIFY_TOKEN }}
+        run: |
+          if [ -z "$COOLIFY_WEBHOOK" ] && [ -z "$COOLIFY_TOKEN" ]; then
+            echo '::warning::Image published only. Configure COOLIFY_WEBHOOK and COOLIFY_TOKEN to enable automatic deployment.'
+            echo 'Coolify deployment skipped: deployment secrets are not configured.' >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          test -n "$COOLIFY_WEBHOOK" && test -n "$COOLIFY_TOKEN"
+          curl --fail --silent --show-error --proto '=https' \
+            --connect-timeout 15 --max-time 60 --request POST \
+            --header "Authorization: Bearer $COOLIFY_TOKEN" \
+            --output /tmp/coolify-deploy.json "$COOLIFY_WEBHOOK"
+          jq -e '.deployments | length > 0' /tmp/coolify-deploy.json > /dev/null
+          echo 'Coolify accepted the deployment request. Check Coolify for container health and completion.' >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Container logs on failure
+        if: failure()
+        run: docker logs mealie-check || true
+
+      - name: Clean up
+        if: always()
+        run: |
+          docker rm -f -v mealie-check || true
+          docker logout ghcr.io
