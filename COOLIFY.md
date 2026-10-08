@@ -63,10 +63,8 @@ how users will reach the new instance. Email links use `BASE_URL` exactly.
 
 ## Container verification
 
-The **Coolify Docker Smoke Test** GitHub Actions workflow builds this exact Dockerfile,
-starts the resulting container with a persistent volume, checks the frontend and API,
-verifies the long-lived login cookie, and checks restart persistence. It uses dummy
-SMTP credentials and sends no email. It can be run manually from the Actions tab.
+GitHub Actions workflows have been removed from this fork. Coolify builds the
+Dockerfile directly; no GitHub Actions build is required.
 
 For a local Docker build:
 

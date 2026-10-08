@@ -62,6 +62,7 @@ class AlchemyExporter(BaseService):
         "date_updated",
         "timestamp",
         "expires_at",
+        "consumed_at",
         "locked_at",
         "last_made",
         "completed_date",
